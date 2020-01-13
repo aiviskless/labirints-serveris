@@ -17,7 +17,7 @@ void *client_handler(void *client_socket) {
 
   // send map to client 
   // send(socket, food_map, sizeof(food_map), 0);
-  puts("Map sent to client");
+  puts("Thread successfully started");
 
   while ((recv_size = recv(socket, packet, sizeof(packet), 0)) > 0) {
     // get packet type
@@ -25,6 +25,8 @@ void *client_handler(void *client_socket) {
     // process packets
     switch (packet_type) {
       case JOIN_GAME:
+        puts("Received JOIN_GAME request");
+        process_join_request();
       case MOVE:
       case LOBBY_INFO:
       case GAME_IN_PROGRESS:
@@ -45,13 +47,15 @@ void *client_handler(void *client_socket) {
     puts("Error while receiving data");
   }
 
+  // free the socket
+  close(socket);
   free(client_socket);
 }
 
 int main()
 {
-  int server_socket, client_socket;
-  struct sockaddr_in server;
+  int server_socket, client_socket, *new_socket;
+  struct sockaddr_in, server;
   pthread_t thread;
 
   // create socket
@@ -67,6 +71,11 @@ int main()
   server.sin_addr.s_addr = INADDR_ANY;
   server.sin_family = AF_INET;
   server.sin_port = htons(PORT);
+
+  // enables port reuse after program ends
+  if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) < 0) {
+    perror("setsockopt(SO_REUSEADDR) failed");
+  }
 
   // bind socket to the specified IP and port
   if (bind(server_socket, (struct sockaddr *)&server, sizeof(server)) < 0) {
@@ -84,7 +93,10 @@ int main()
   while (client_socket = accept(server_socket, NULL, NULL)) {
     puts("We have a connection");
 
-    if (pthread_create(&thread, NULL, client_handler, client_socket) < 0) {
+    new_socket = malloc(1);
+		*new_socket = client_socket;
+
+    if (pthread_create(&thread, NULL, client_handler, (void*) new_socket) < 0) {
       puts("Error while creating thread");
       return 1;
     }
