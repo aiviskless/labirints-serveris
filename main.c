@@ -9,36 +9,88 @@ int client_socket;
 
 void process_join_request();
 
+void *client_handler(void *client_socket) {
+  int recv_size;
+  int socket = *(int*)client_socket;
+  char packet[256];
+  char packet_type;
+
+  // send map to client 
+  // send(socket, food_map, sizeof(food_map), 0);
+  puts("Map sent to client");
+
+  while ((recv_size = recv(socket, packet, sizeof(packet), 0)) > 0) {
+    // get packet type
+    packet_type = packet[0];
+    // process packets
+    switch (packet_type) {
+      case JOIN_GAME:
+      case MOVE:
+      case LOBBY_INFO:
+      case GAME_IN_PROGRESS:
+      case USERNAME_TAKEN:
+      case GAME_START:
+      case MAP_ROW:
+      case GAME_UPDATE:
+      case PLAYER_DEAD:
+      case GAME_END:
+      default:
+        printf("Packet does not match any format: %s\n", packet);   
+    }
+  }
+
+  if (recv_size == 0) {
+    puts("Lost connection");
+  } else if (recv_size < 0) {
+    puts("Error while receiving data");
+  }
+
+  free(client_socket);
+}
+
 int main()
 {
+  int server_socket, client_socket;
+  struct sockaddr_in server;
+  pthread_t thread;
+
   // create socket
-  int server_socket;
   server_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (server_socket < 0)
   {
-    printf("Error while creating socket\n");
+    puts("Error while creating socket");
     return 1;
   }
-  printf("Socket created\n");
+  puts("Socket created");
 
   // set server address
-  struct sockaddr_in server;
   server.sin_addr.s_addr = INADDR_ANY;
   server.sin_family = AF_INET;
   server.sin_port = htons(PORT);
 
   // bind socket to the specified IP and port
   if (bind(server_socket, (struct sockaddr *)&server, sizeof(server)) < 0) {
-    printf("Error while binding\n");
+    puts("Error while binding");
     return 1;
   }
-  printf("Socket binded\n");
+  puts("Socket binded");
 
   // listen
   listen(server_socket, 30);
-  client_socket = accept(server_socket, NULL, NULL);
 
-  process_join_request();
+  // client_socket = accept(server_socket, NULL, NULL);
+
+  // process connections
+  while (client_socket = accept(server_socket, NULL, NULL)) {
+    puts("We have a connection");
+
+    if (pthread_create(&thread, NULL, client_handler, client_socket) < 0) {
+      puts("Error while creating thread");
+      return 1;
+    }
+    puts("Thread created");
+    
+  }
 
   // close
   close(server_socket);
