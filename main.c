@@ -1,62 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-
-#define PIXEL_SIZE 40 
-#define TILE_SIZE_IN_PIXELS 8
-#define TILE_SIZE (PIXEL_SIZE * TILE_SIZE_IN_PIXELS)
-
-#define DRAW_SIZE 8
-
-// gameplay params
-#define PLAYER_SPEED 40
-
-// arena map params
-#define ARENA_WALLS "-|+"
-#define ARENA_WIDTH_IN_TILES 36
-#define ARENA_HEIGHT_IN_TILES 30
-#define ARENA_HEIGHT (ARENA_HEIGHT_IN_TILES*TILE_SIZE)
-#define ARENA_WIDTH (ARENA_WIDTH_IN_TILES*TILE_SIZE)
+#include "libs.h"
+#include "consts.h"
 
 // PARAMS
 const int PORT = 8887;
 
 // GLOBALS
-const char food_map[ARENA_HEIGHT_IN_TILES*ARENA_WIDTH_IN_TILES] = 
-"+----------+-----------+-----------+"
-"|.        .|.         .|.         .|"
-"|          |           |           |"
-"|     +----+----+  +---+-----+     |"
-"|     |       ..| .|..       |     |"
-"|  +  |       ..|. |..       |  +  |"
-"|  |  |  +-------  -------+  |  |  |"
-"|  |  |  |.              .|  |  |  |"
-"|  |  |  |                |  |  |  |"
-"|  |     |  +----------+  |     |  |"
-"|  |     |   .        .   |     |  |"
-"|  |  |  |                |  |  |  |"
-"|  |  |  |  +  +-  -+  +  |  |  |  |"
-"| .|  +--+  |  |.  .|  |  +--+  | .|"
-"+--+   .    |          |    .   +--+"
-"+--+    .   |          |   .    +--+"
-"| .|  +--+  |  |.  .|  |  +--+  | .|"
-"|  |  |  |  +  +-  -+  +  |  |  |  |"
-"|  |  |  |                |  |  |  |"
-"|  |     |   .        .   |     |  |"
-"|  |     |  +----------+  |     |  |"
-"|  |  |  |                |  |  |  |"
-"|  |  |  |.              .|  |  |  |"
-"|  |  |  +------+  +------+  |  |  |"
-"|  +  |       ..|. |..       |  +  |"
-"|     |       ..| .|..       |     |"
-"|     +----+----+  +----+----+     |"
-"|          |            |          |"
-"|.        .|.          .|.        .|"
-"+----------+------------+----------+"
-;
+int client_socket;
+
+void process_join_request();
 
 int main()
 {
@@ -85,18 +36,30 @@ int main()
 
   // listen
   listen(server_socket, 30);
-
-  int client_socket;
   client_socket = accept(server_socket, NULL, NULL);
 
-
-
-  // send map to client 
-  send(client_socket, food_map, sizeof(food_map), 0);
-  printf("Map sent to client\n");
+  process_join_request();
 
   // close
   close(server_socket);
 
   return 0;
+}
+
+void process_join_request() {
+  char response[RESPONSE_LENGTH];
+  char *responseToClient = "2Test";
+
+  // read JOIN_GAME
+  if (read(client_socket, response, RESPONSE_LENGTH) < 0) {
+    puts("Read from server failed");
+  } else {
+    switch (response[0]) {
+      case JOIN_GAME:
+        write(client_socket, responseToClient, sizeof(responseToClient));
+        break;
+      default:
+        break;
+    }
+  }
 }
