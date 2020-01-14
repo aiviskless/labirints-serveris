@@ -14,5 +14,8 @@
 #define PLAYER_DEAD '8'
 #define GAME_END '9'
 
+#define LOBBY 0
+#define INGAME 1
+
 
 #endif
