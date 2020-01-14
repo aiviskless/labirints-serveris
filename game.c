@@ -1,4 +1,5 @@
 #import "game.h"
+#import "helpers.c"
 
 Game* game;
 
@@ -9,7 +10,7 @@ void start_game(server_socket, client_socket) {
   int connections;
 
   // generate game structure
-  game = malloc(sizeof(game));
+  game = malloc(sizeof(Game));
 
   game->state = LOBBY;
   game->players = create_playerlist();
@@ -30,11 +31,11 @@ void start_game(server_socket, client_socket) {
         exit(1);
       }
       puts("Thread created");
-      connections = connections + 1;
+      ++connections;
 
-      if (game->state == INGAME) {
-        break;
-      }
+      // if (connections == 8) {
+      //   run_game_engine();
+      // }
       
     }
 
@@ -47,23 +48,12 @@ void start_game(server_socket, client_socket) {
 }
 
 
-PlayerList *create_playerlist() {
-  PlayerList *list = malloc(sizeof(PlayerList));
-  list->head = NULL;
-  list->tail = NULL;
-  list->count = 0;
-
-  return list;
-}
-
-
 void *client_processor(void *client_socket) {
   int recv_size;
   int socket = *(int*)client_socket;
   char packet[RESPONSE_LENGTH];
+  Player *player;
 
-  // send map to client 
-  // send(socket, food_map, sizeof(food_map), 0);
   puts("Thread successfully started");
 
   // process packets
@@ -71,12 +61,12 @@ void *client_processor(void *client_socket) {
     switch (packet[0]) {
       case JOIN_GAME: {
         puts("Received JOIN_GAME request");
-        process_join_request(socket, packet);
+        player = process_join_request(socket, packet);
         break;
       }
       case MOVE: {
         puts("Received MOVE request");
-        process_move_request();
+        process_move_request(player, packet);
         break;
       }
       default: {
@@ -100,11 +90,27 @@ void *client_processor(void *client_socket) {
 }
 
 
-void process_join_request(int client_socket, char* packet) {
-  write(client_socket, packet, sizeof(packet));
+Player * process_join_request(int client_socket, char* packet) {
+  Player *player = NULL;
+  char* username = ++packet;
+  // write(client_socket, packet, sizeof(packet));
+
+  if (game->state == INGAME) {
+    puts("Game in progress");
+    write(client_socket, "3", sizeof("3"));
+  } else if (username_exists(username, game)) {
+    printf("Username taken: %s", username);
+    write(client_socket, "4", sizeof("4"));
+  } else {
+    printf("Creating new player... %s", username);
+    player = create_player(game, username, client_socket);
+  }
+  
+  return player;
 }
 
 
-void process_move_request() {
+void process_move_request(Player* player, char* packet) {
   // do_things.exe
 }
+

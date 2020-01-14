@@ -4,19 +4,16 @@
 #include "libs.h"
 #include "consts.h"
 
-typedef struct {
-  int id;
+typedef struct Player{
   char* name;
-
   int* socket;
-
   int pos_x;
   int pos_y;
   struct Player *next;
   struct Player *prev;
 } Player;
 
-typedef struct {
+typedef struct PlayerList{
   Player* head;
   Player* tail;
   int count;
@@ -29,10 +26,12 @@ typedef struct {
 
 void start_game(int, int);
 
+PlayerList *create_playerlist();
+
 void *client_processor(void *);
 
-void process_join_request(int, char*);
+Player * process_join_request(int, char*);
 
-void process_move_request();
+void process_move_request(Player*, char*);
 
 #endif
