@@ -6,7 +6,7 @@
 
 typedef struct Player{
   char* name;
-  int* socket;
+  int socket;
   int pos_x;
   int pos_y;
   struct Player *next;
@@ -33,5 +33,9 @@ void *client_processor(void *);
 Player * process_join_request(int, char*);
 
 void process_move_request(Player*, char*);
+
+void update_lobby_info();
+
+void start_round();
 
 #endif

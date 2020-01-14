@@ -29,7 +29,7 @@ Player *create_player(Game *game, char* username, int client_socket) {
   Player *new_player = malloc(sizeof(Player));
 
   new_player->name = username;
-  new_player->socket = &client_socket;
+  new_player->socket = client_socket;
 
   if (game->players->head == NULL) {
     game->players->head = new_player;
@@ -38,6 +38,8 @@ Player *create_player(Game *game, char* username, int client_socket) {
     game->players->tail->next = new_player;
     game->players->tail = new_player;
   }
+
+  game->players->count = game->players->count + 1;
 
   return new_player;
 }

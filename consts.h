@@ -3,6 +3,9 @@
 
 #define RESPONSE_LENGTH 256
 
+#define ARENA_WIDTH_IN_TILES 36
+#define ARENA_HEIGHT_IN_TILES 30
+
 #define JOIN_GAME '0'
 #define MOVE '1'
 #define LOBBY_INFO '2'

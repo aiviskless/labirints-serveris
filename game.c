@@ -1,5 +1,6 @@
 #include "game.h"
 #include "helpers.c"
+#include "maps.c"
 
 Game* game;
 
@@ -92,21 +93,82 @@ void *client_processor(void *client_socket) {
 
 Player * process_join_request(int client_socket, char* packet) {
   Player *player = NULL;
+  char type[2];
   char* username = ++packet;
   // write(client_socket, packet, sizeof(packet));
 
   if (game->state == INGAME) {
     puts("Game in progress");
-    write(client_socket, "3", sizeof("3"));
+    write(client_socket, GAME_IN_PROGRESS, sizeof(GAME_IN_PROGRESS));
   } else if (username_exists(username, game)) {
     printf("Username taken: %s", username);
-    write(client_socket, "4", sizeof("4"));
+    write(client_socket, USERNAME_TAKEN, sizeof(USERNAME_TAKEN));
   } else {
     printf("Creating new player... %s", username);
     player = create_player(game, username, client_socket);
+    // update_lobby_info();
+    // if (game->players->count == 2) {
+      puts("start round");
+      start_round(client_socket);
+    // }
   }
   
   return player;
+}
+
+void start_round(socket) {
+  char packet[ARENA_HEIGHT_IN_TILES * ARENA_HEIGHT_IN_TILES + 100];
+  char code[2];
+  bzero(packet, ARENA_HEIGHT_IN_TILES * ARENA_HEIGHT_IN_TILES + 100);
+  bzero(code, 2);
+
+  puts("-C");
+  sprintf(code, "%c", MAP_ROW);
+  puts("-B");
+  strcat(packet, code);
+  puts("-A");
+  strcat(packet, arena_map);
+  puts("A");
+  // Player *player;
+
+  printf("%s", packet);
+
+  write(socket, packet, sizeof(packet));
+
+  // player = game->players->head;
+  // puts("B");
+  // do {
+  //   write(player->socket, packet, sizeof(packet));
+  //   printf("sent %s\n", player->name);
+  //   player = player->next;
+  // } while (player->next != NULL);
+}
+
+void update_lobby_info() {
+  Player* player = game->players->head;
+  char msg[RESPONSE_LENGTH];
+  char cnt[2];
+  puts("A");
+  // create message
+  msg[0] = LOBBY_INFO;
+  sprintf(cnt, "%d", game->players->count);
+  printf("%s\n", cnt);
+  strcat(msg, cnt);
+  puts("B");
+  do {
+    strcat(msg, player->name);
+    if (strlen(player->name) < 16) {
+      strcat(msg, "\0");
+    }
+    player = player->next;
+  } while (player->next != NULL);
+  printf("msg: %s", msg);
+
+  player = game->players->head;
+  do {
+    write(player->socket, msg, sizeof(msg));
+    player = player->next;
+  } while (player->next != NULL);
 }
 
 
