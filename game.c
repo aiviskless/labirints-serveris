@@ -133,32 +133,24 @@ void start_round(int socket) {
   sprintf(code, "%c", MAP_ROW);
   strcat(packet, code);
   strcat(packet, arena_map);
-  // strcat(packet, "\0");
 
-  printf("%s\n", packet);
-  printf("%li\n", strlen(packet));
-
-  // write(socket, packet, sizeof(packet));
   Player *player;
   player = game->players->head;
   do {
     write(player->socket, packet, sizeof(packet));
     printf("sent %s\n", player->name);
     player = player->next;
-  } while (player->next != NULL);
+  } while (player != NULL);
 }
 
 void update_lobby_info() {
   Player* player = game->players->head;
   char msg[RESPONSE_LENGTH];
   char cnt[2];
-  puts("A");
   // create message
   msg[0] = LOBBY_INFO;
   sprintf(cnt, "%d", game->players->count);
-  printf("%s\n", cnt);
   strcat(msg, cnt);
-  puts("B");
   do {
     strcat(msg, player->name);
     if (strlen(player->name) < 16) {
@@ -166,7 +158,6 @@ void update_lobby_info() {
     }
     player = player->next;
   } while (player->next != NULL);
-  printf("msg: %s", msg);
 
   player = game->players->head;
   do {
