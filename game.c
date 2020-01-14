@@ -5,7 +5,7 @@
 Game* game;
 
 
-void start_game(server_socket, client_socket) {
+void start_game(int server_socket, int client_socket) {
   pthread_t thread;
   int *new_socket;
   int connections;
@@ -99,10 +99,18 @@ Player * process_join_request(int client_socket, char* packet) {
 
   if (game->state == INGAME) {
     puts("Game in progress");
-    write(client_socket, GAME_IN_PROGRESS, sizeof(GAME_IN_PROGRESS));
+
+    bzero(type, 2);
+    sprintf(type, "%c", GAME_IN_PROGRESS);
+
+    write(client_socket, type, sizeof(type));
   } else if (username_exists(username, game)) {
     printf("Username taken: %s", username);
-    write(client_socket, USERNAME_TAKEN, sizeof(USERNAME_TAKEN));
+
+    bzero(type, 2);
+    sprintf(type, "%c", USERNAME_TAKEN);
+
+    write(client_socket, type, sizeof(type));
   } else {
     printf("Creating new player... %s", username);
     player = create_player(game, username, client_socket);
@@ -116,27 +124,23 @@ Player * process_join_request(int client_socket, char* packet) {
   return player;
 }
 
-void start_round(socket) {
-  char packet[ARENA_HEIGHT_IN_TILES * ARENA_HEIGHT_IN_TILES + 100];
+void start_round(int socket) {
+  char packet[ARENA_HEIGHT_IN_TILES * ARENA_WIDTH_IN_TILES + 2];
   char code[2];
-  bzero(packet, ARENA_HEIGHT_IN_TILES * ARENA_HEIGHT_IN_TILES + 100);
+  bzero(packet, ARENA_HEIGHT_IN_TILES * ARENA_WIDTH_IN_TILES + 2);
   bzero(code, 2);
 
-  puts("-C");
   sprintf(code, "%c", MAP_ROW);
-  puts("-B");
   strcat(packet, code);
-  puts("-A");
   strcat(packet, arena_map);
-  puts("A");
+  // strcat(packet, "\0");
   // Player *player;
 
-  printf("%s", packet);
+  printf("%s\n", packet);
+  printf("%li\n", strlen(packet));
 
   write(socket, packet, sizeof(packet));
-
   // player = game->players->head;
-  // puts("B");
   // do {
   //   write(player->socket, packet, sizeof(packet));
   //   printf("sent %s\n", player->name);
