@@ -1,5 +1,5 @@
-#import "game.h"
-#import "helpers.c"
+#include "game.h"
+#include "helpers.c"
 
 Game* game;
 
