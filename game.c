@@ -115,10 +115,10 @@ Player * process_join_request(int client_socket, char* packet) {
     printf("Creating new player... %s", username);
     player = create_player(game, username, client_socket);
     // update_lobby_info();
-    // if (game->players->count == 2) {
+    if (game->players->count == 2) {
       puts("start round");
       start_round(client_socket);
-    // }
+    }
   }
   
   return player;
@@ -134,18 +134,18 @@ void start_round(int socket) {
   strcat(packet, code);
   strcat(packet, arena_map);
   // strcat(packet, "\0");
-  // Player *player;
 
   printf("%s\n", packet);
   printf("%li\n", strlen(packet));
 
-  write(socket, packet, sizeof(packet));
-  // player = game->players->head;
-  // do {
-  //   write(player->socket, packet, sizeof(packet));
-  //   printf("sent %s\n", player->name);
-  //   player = player->next;
-  // } while (player->next != NULL);
+  // write(socket, packet, sizeof(packet));
+  Player *player;
+  player = game->players->head;
+  do {
+    write(player->socket, packet, sizeof(packet));
+    printf("sent %s\n", player->name);
+    player = player->next;
+  } while (player->next != NULL);
 }
 
 void update_lobby_info() {
